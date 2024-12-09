@@ -6,9 +6,9 @@ export const bot = new TelegramBot(botToken);
 import { addSubscriber, removeSubscriber, getSubscribers } from "./subscribers";
 
 // Handle `/subscribe` command
-bot.onText(/\/subscribe/, (msg) => {
+bot.onText(/\/subscribe/, async (msg) => {
   const chatId = msg.chat.id;
-  if (addSubscriber(chatId)) {
+  if (await addSubscriber(chatId)) {
     bot.sendMessage(
       chatId,
       "You are now subscribed to wallet balance notifications!"
@@ -19,9 +19,9 @@ bot.onText(/\/subscribe/, (msg) => {
 });
 
 // Handle `/unsubscribe` command
-bot.onText(/\/unsubscribe/, (msg) => {
+bot.onText(/\/unsubscribe/, async (msg) => {
   const chatId = msg.chat.id;
-  if (removeSubscriber(chatId)) {
+  if (await removeSubscriber(chatId)) {
     bot.sendMessage(
       chatId,
       "You have unsubscribed from wallet balance notifications."
@@ -33,7 +33,7 @@ bot.onText(/\/unsubscribe/, (msg) => {
 
 // Notify all subscribers
 export const notifySubscribers = async (message: string) => {
-  const subscribers = getSubscribers();
+  const subscribers = await getSubscribers();
   for (const chatId of subscribers) {
     try {
       await bot.sendMessage(chatId, message);
