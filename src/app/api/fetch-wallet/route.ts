@@ -3,7 +3,7 @@ import axios from "axios";
 import supabase from "@/lib/supabase";
 import { notifySubscribers } from "@/lib/bot";
 
-const balance_threshold = 1_000_000_000;
+const balance_threshold = 100_000_000;
 
 const BASE_API_URL =
   "https://api.xion-mainnet-1.burnt.com/cosmos/bank/v1beta1/balances/";
@@ -46,7 +46,10 @@ export async function GET(request: Request) {
 
     const balance_int = parseInt(balance);
 
-    if (balance_int < balance_threshold) {
+    if (
+      address === "xion12q9q752mta5fvwjj2uevqpuku9y60j33j9rll0" &&
+      balance_int < balance_threshold
+    ) {
       responseMessage += `- ⚠️ Wallet balance is low: ${address} has a balance of ${
         balance_int / 1_000_000
       } uxion`;
