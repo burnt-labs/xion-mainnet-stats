@@ -3,7 +3,16 @@ import axios from "axios";
 import supabase from "@/lib/supabase";
 import { notifySubscribers } from "@/lib/bot";
 
-const balance_threshold = 100_000_000;
+const WALLET_THRESHOLDS = {
+  xion12q9q752mta5fvwjj2uevqpuku9y60j33j9rll0: {
+    name: "Fee Granter",
+    threshold: 100_000_000,
+  },
+  xion1ry3nup4y70dvj4pne67gn2vhzcy4ncdca8s0tykwga399qqzdfcqtvp30n: {
+    name: "BonusBlock Fee Granter",
+    threshold: 25_000_000,
+  },
+} as const;
 
 const BASE_API_URL =
   "https://api.xion-mainnet-1.burnt.com/cosmos/bank/v1beta1/balances/";
@@ -46,18 +55,20 @@ export async function GET(request: Request) {
 
     const balance_int = parseInt(balance);
 
-    if (
-      address === "xion12q9q752mta5fvwjj2uevqpuku9y60j33j9rll0" &&
-      balance_int < balance_threshold
-    ) {
-      responseMessage += `- ⚠️ Wallet balance is low: ${address} has a balance of ${
-        balance_int / 1_000_000
-      } uxion`;
-      await notifySubscribers(
-        `⚠️ Wallet balance is low: ${address} has a balance of ${
+    console.log("fetch wallet test", address, balance_int);
+
+    if (address in WALLET_THRESHOLDS) {
+      const walletInfo =
+        WALLET_THRESHOLDS[address as keyof typeof WALLET_THRESHOLDS];
+      if (balance_int < walletInfo.threshold) {
+        const warningMessage = `⚠️ ${walletInfo.name} wallet balance is low: ${
           balance_int / 1_000_000
-        } uxion`
-      );
+        } XION (threshold: ${
+          walletInfo.threshold / 1_000_000
+        } XION)\nhttps://www.mintscan.io/xion/address/${address}`;
+        responseMessage += `- ${warningMessage}`;
+        await notifySubscribers(warningMessage);
+      }
     }
 
     return NextResponse.json({
