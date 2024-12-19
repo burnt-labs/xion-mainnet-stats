@@ -35,12 +35,30 @@ export async function GET(request: Request) {
         startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
 
-    const { data, error } = await supabase
-      .from("feegrant_balance")
-      .select("*")
-      .eq("address", address)
-      .gte("created_at", startTime.toISOString())
-      .order("created_at", { ascending: true });
+    let data: Array<{
+      address: string;
+      balance: string;
+      created_at: string;
+    }> | null;
+    let error: Error | null;
+
+    if (interval === "7d" || interval === "all") {
+      const rpcResponse = await supabase.rpc("get_daily_feegrant_balances");
+      data = rpcResponse.data?.filter(
+        (row: { address: string }) => row.address === address
+      );
+      error = rpcResponse.error;
+    } else {
+      const queryResponse = await supabase
+        .from("feegrant_balance")
+        .select("*")
+        .eq("address", address)
+        .gte("created_at", startTime.toISOString())
+        .order("created_at", { ascending: true });
+
+      data = queryResponse.data;
+      error = queryResponse.error;
+    }
 
     if (error) throw error;
 

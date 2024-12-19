@@ -40,8 +40,6 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    console.log(`Holders data for interval ${interval}:`, data);
-
     if (!data || data.length === 0) {
       return NextResponse.json(
         { error: "No holder data found" },
