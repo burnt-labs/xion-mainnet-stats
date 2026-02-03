@@ -3,6 +3,7 @@ import { WalletBalance } from "@/types/wallet";
 import { TimeSeriesChartWrapper } from "../charts/TimeSeriesChartWrapper";
 import { TimeInterval } from "../charts/TimeSeriesChart";
 import { useState } from "react";
+import { APIError } from "@/utils/error-handling";
 
 interface WalletBalanceChartProps {
   address: string;
@@ -21,7 +22,13 @@ export const WalletBalanceChart = ({
       const response = await fetch(
         `/api/wallet-balance/history?address=${address}&interval=${timeInterval}`
       );
-      if (!response.ok) throw new Error("Failed to fetch wallet data");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new APIError(
+          errorData.error || "Failed to fetch wallet data",
+          response.status
+        );
+      }
       return response.json();
     },
   });

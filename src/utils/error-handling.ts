@@ -11,3 +11,10 @@ export const handleAPIError = (error: unknown) => {
   }
   return "An unexpected error occurred";
 };
+
+export const isNotFoundError = (error: unknown): boolean => {
+  if (error instanceof APIError) {
+    return error.status === 404;
+  }
+  return false;
+};

@@ -3,6 +3,7 @@ import { HoldersData } from "@/types/holders";
 import { TimeSeriesChartWrapper } from "../charts/TimeSeriesChartWrapper";
 import { TimeInterval } from "../charts/TimeSeriesChart";
 import { useState } from "react";
+import { APIError } from "@/utils/error-handling";
 
 export const TotalHoldersChart = () => {
   const [timeInterval, setTimeInterval] = useState<TimeInterval>("24h");
@@ -17,7 +18,13 @@ export const TotalHoldersChart = () => {
       const response = await fetch(
         `/api/holders?snapshot=true&interval=${timeInterval}`
       );
-      if (!response.ok) throw new Error("Failed to fetch holders data");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new APIError(
+          errorData.error || "Failed to fetch holders data",
+          response.status
+        );
+      }
       return response.json();
     },
   });

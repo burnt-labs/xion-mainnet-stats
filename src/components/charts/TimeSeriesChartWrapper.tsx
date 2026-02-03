@@ -2,6 +2,7 @@ import { TimeInterval } from "./TimeSeriesChart";
 import { TimeSeriesChart } from "./TimeSeriesChart";
 import { TimeIntervalSelector } from "./TimeIntervalSelector";
 import { useState } from "react";
+import { isNotFoundError } from "@/utils/error-handling";
 
 interface TimeSeriesChartWrapperProps {
   data: Array<{ timestamp: string; value: number }>;
@@ -35,10 +36,17 @@ export const TimeSeriesChartWrapper = ({
         />
       </div>
 
-      {Boolean(error) && <div className="text-red-400">Error loading data</div>}
+      {Boolean(error) && (
+        <div className={isNotFoundError(error) ? "text-gray-400" : "text-red-400"}>
+          {isNotFoundError(error) ? "No data available" : "Error loading data"}
+        </div>
+      )}
       {isLoading && <div className="text-gray-400">Loading...</div>}
-      {!error && !isLoading && (
+      {!error && !isLoading && data.length > 0 && (
         <TimeSeriesChart data={data} interval={timeInterval} />
+      )}
+      {!error && !isLoading && data.length === 0 && (
+        <div className="text-gray-400">No data available</div>
       )}
     </div>
   );

@@ -1,0 +1,14 @@
+name = "xion-mainnet-stats"
+main = ".open-next/worker.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Static assets
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[vars]
+# Non-sensitive env vars can go here
+# Sensitive vars should be set via `wrangler secret put` or workflow secrets
+NEXT_PUBLIC_SUPABASE_URL = "https://gwypiiczzghiwemksgnn.supabase.co" # TODO - replace it with a Burnt one

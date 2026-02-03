@@ -18,12 +18,18 @@ export async function GET(request: Request) {
       .select("*")
       .eq("address", address)
       .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
     if (error) throw error;
 
-    return NextResponse.json(data);
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: "No balance data found for this address" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(data[0]);
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
