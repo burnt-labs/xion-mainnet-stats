@@ -3,8 +3,8 @@ name: Deploy
 on:
   push:
     branches:
-      # - main
-      - feat/create-cf-worker
+      #- main
+      - feat/create-cf-worker # TODO - remove this
   workflow_dispatch:
 
 env:
@@ -38,6 +38,32 @@ jobs:
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          secrets: |
+            SUPABASE_KEY
+
+  deploy-cron-collector:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: workers/cron-collector
+        run: npm install
+
+      - name: Deploy Cron Collector Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/cron-collector
           command: deploy
           secrets: |
             SUPABASE_KEY
