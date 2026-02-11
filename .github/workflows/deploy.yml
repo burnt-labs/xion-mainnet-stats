@@ -12,6 +12,8 @@ env:
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
   SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+  SLACK_BOT_TOKEN: ${{ secrets.NOTIFY_DEVOPS_SLACK_APP_BOT_TOKEN }}
+  SLACK_CHANNEL_ID: ${{ secrets.DEVOPS_NOTIFICATIONS_SLACK_CHANNEL_ID }}
 
 jobs:
   deploy:
@@ -67,3 +69,5 @@ jobs:
           command: deploy
           secrets: |
             SUPABASE_KEY
+            SLACK_BOT_TOKEN
+            SLACK_CHANNEL_ID
