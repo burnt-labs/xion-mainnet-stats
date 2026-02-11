@@ -32,16 +32,17 @@ const MONITORED_WALLETS: MonitoredWallet[] = [
   {
     address: "xion12q9q752mta5fvwjj2uevqpuku9y60j33j9rll0",
     label: "Fee Granter",
-    threshold: "100",
+    threshold: "700",
   },
   {
     address: "xion1ry3nup4y70dvj4pne67gn2vhzcy4ncdca8s0tykwga399qqzdfcqtvp30n",
     label: "BonusBlock Fee Granter",
-    threshold: "100",
+    threshold: "700",
   },
 ];
 
 const XION_API_BASE = "https://api.xion-mainnet-1.burnt.com";
+const DENOM_OWNERS_URL = `${XION_API_BASE}/cosmos/bank/v1beta1/denom_owners/uxion`;
 
 async function fetchBalance(address: string): Promise<BalanceResponse> {
   const url = `${XION_API_BASE}/cosmos/bank/v1beta1/balances/${address}/by_denom?denom=uxion`;
@@ -171,6 +172,43 @@ async function checkAndAlert(env: Env, wallet: MonitoredWallet, balance: string)
   }
 }
 
+async function collectHolders(env: Env): Promise<void> {
+  console.log("Fetching holder count from chain...");
+
+  const response = await fetch(DENOM_OWNERS_URL);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch denom owners: ${response.status}`);
+  }
+
+  const data = (await response.json()) as {
+    denom_owners: unknown[];
+    pagination: { next_key: string | null; total: string };
+  };
+
+  const totalHolders = data.pagination.total;
+
+  const insertRes = await fetch(`${env.SUPABASE_URL}/rest/v1/Xion Holders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: env.SUPABASE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_KEY}`,
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      total_holders: totalHolders,
+      data: data.denom_owners,
+    }),
+  });
+
+  if (!insertRes.ok) {
+    const error = await insertRes.text();
+    throw new Error(`Failed to insert holder data: ${error}`);
+  }
+
+  console.log(`Holder snapshot saved: ${totalHolders} holders`);
+}
+
 async function collectBalance(
   env: Env,
   wallet: MonitoredWallet
@@ -194,8 +232,20 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-    console.log(`Cron triggered at ${new Date().toISOString()}`);
+    console.log(`Cron triggered at ${new Date().toISOString()} (${controller.cron})`);
 
+    // Daily cron: collect holder count
+    if (controller.cron === "0 3 * * *") {
+      try {
+        await collectHolders(env);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error(`Holder collection failed: ${message}`);
+      }
+      return;
+    }
+
+    // Every 5 minutes: collect wallet balances
     const results = await Promise.all(
       MONITORED_WALLETS.map((wallet) => collectBalance(env, wallet))
     );

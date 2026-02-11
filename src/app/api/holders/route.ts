@@ -23,9 +23,30 @@ export async function GET(request: Request) {
       case "all":
         startTime = new Date(0);
         break;
-      case "current":
-        startTime = new Date(now.getTime() - 60 * 20 * 1000);
-        break;
+      case "current": {
+        // Fetch only the most recent snapshot
+        const { data: latestData, error: latestError } = await supabase
+          .from("Xion Holders")
+          .select("total_holders, updated_at")
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (latestError) throw latestError;
+
+        if (!latestData || latestData.length === 0) {
+          return NextResponse.json(
+            { error: "No holder data found" },
+            { status: 404 }
+          );
+        }
+
+        return NextResponse.json({
+          snapshots: latestData.map((record) => ({
+            timestamp: record.updated_at,
+            total_holders: record.total_holders,
+          })),
+        });
+      }
       default:
         startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
