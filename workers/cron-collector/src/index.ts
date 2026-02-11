@@ -32,12 +32,12 @@ const MONITORED_WALLETS: MonitoredWallet[] = [
   {
     address: "xion12q9q752mta5fvwjj2uevqpuku9y60j33j9rll0",
     label: "Fee Granter",
-    threshold: "700",
+    threshold: "700.000",
   },
   {
     address: "xion1ry3nup4y70dvj4pne67gn2vhzcy4ncdca8s0tykwga399qqzdfcqtvp30n",
     label: "BonusBlock Fee Granter",
-    threshold: "700",
+    threshold: "700.000",
   },
 ];
 
